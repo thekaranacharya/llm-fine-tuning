@@ -5,6 +5,7 @@ Module that holds utilities all things-dataset
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader, Dataset
+import transformers
 
 class CustomDataset(Dataset):
     def __init__(self, dataset_dict: DatasetDict, partition: str = "train"):
