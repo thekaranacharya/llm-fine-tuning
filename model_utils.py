@@ -41,37 +41,53 @@ class BaseModel:
 
         return trainable_param_count, total_param_count
 
-    def train(
-        self, 
-        train_loader, 
-        val_loader, 
-        num_epochs: int = 3,
-        learning_rate: float = 2e-5,
-    ):
-        """
-        Method that trains the model for specified number of epochs with the optimizer
-        TODO: Modularise into training and validation loop
-        """
+    def __training_loop(self, train_loader, optimizer, description: str) -> Tuple[float]:
+        """Training loop with PyTorch"""
+        # Training Phase
+        self.model.train()
 
-        # Get trainable parameter count
-        trainable_params, total_params = self.__get_parameter_count()
-        print(f"% of trainable parameters: {(trainable_params / total_params * 100):.2f} %")
+        train_loss = 0.0
+        train_correct = 0
+        total_train = 0
 
-        # Define optimizer
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
+        for batch in tqdm(train_loader, desc=description):
+            inputs = batch["input_ids"].to(self.device)
+            attention_mask = batch["attention_mask"].to(self.device)
+            labels = batch["label"].to(self.device)
+
+            # Forward pass
+            outputs = self.model(inputs, attention_mask=attention_mask, labels=labels)
+
+            # Get loss
+            loss = outputs.loss
+            
+            # Zero the gradients
+            optimizer.zero_grad()
+
+            # Backward pass + Step
+            loss.backward()
+            optimizer.step()
+
+            train_loss += loss.item()
+            _, predicted = torch.max(outputs.logits, 1)
+            total_train += labels.size(0)
+            train_correct += (predicted == labels).sum().item()
         
-        # Put model on device
-        self.model.to(self.device)
+        train_loss = train_loss / total_train
+        train_accuracy = 100 * train_correct / total_train
+        return train_loss, train_accuracy
 
-        for epoch in range(num_epochs):
-            # Training Phase
-            self.model.train()
+    def __validation_test_loop(self, val_test_loader, which: str = "Validation") -> Tuple[float]:
+        """Validation / Testing loop with PyTorch"""
+        # Validation Phase
+        self.model.eval()
 
-            train_loss = 0.0
-            train_correct = 0
-            total_train = 0
+        val_loss = 0.0
+        val_correct = 0
+        total_val = 0
 
-            for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} (Train)"):
+        with torch.no_grad():
+            for batch in tqdm(val_test_loader, desc=which):
                 inputs = batch["input_ids"].to(self.device)
                 attention_mask = batch["attention_mask"].to(self.device)
                 labels = batch["label"].to(self.device)
@@ -81,85 +97,53 @@ class BaseModel:
 
                 # Get loss
                 loss = outputs.loss
-                
-                # Zero the gradients
-                optimizer.zero_grad()
 
-                # Backward pass + Step
-                loss.backward()
-                optimizer.step()
-
-                train_loss += loss.item()
+                val_loss += loss.item()
                 _, predicted = torch.max(outputs.logits, 1)
-                total_train += labels.size(0)
-                train_correct += (predicted == labels).sum().item()
+                total_val += labels.size(0)
+                val_correct += (predicted == labels).sum().item()
 
-            # Validation Phase
-            self.model.eval()
+        val_loss = val_loss / total_val
+        val_accuracy = 100 * val_correct / total_val
+        return val_loss, val_accuracy
+    
+    def train(
+        self, 
+        train_loader, 
+        val_loader, 
+        num_epochs: int = 3,
+        learning_rate: float = 2e-5,
+    ) -> None:
+        """
+        Method that trains the model for specified number of epochs with the optimizer
+        """
+        # Get trainable parameter count
+        trainable_params, total_params = self.__get_parameter_count()
+        print(f"\n% of trainable parameters: {(trainable_params / total_params * 100):.2f} %\n")
 
-            val_loss = 0.0
-            val_correct = 0
-            total_val = 0
+        # Define optimizer
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
+        
+        # Put model on device
+        self.model.to(self.device)
 
-            with torch.no_grad():
-                for batch in tqdm(val_loader, desc="Validation"):
-                    inputs = batch["input_ids"].to(self.device)
-                    attention_mask = batch["attention_mask"].to(self.device)
-                    labels = batch["label"].to(self.device)
-
-                    # Forward pass
-                    outputs = self.model(inputs, attention_mask=attention_mask, labels=labels)
-
-                    # Get loss
-                    loss = outputs.loss
-
-                    val_loss += loss.item()
-                    _, predicted = torch.max(outputs.logits, 1)
-                    total_val += labels.size(0)
-                    val_correct += (predicted == labels).sum().item()
+        for epoch in range(num_epochs):
+            description = f"Epoch {epoch+1}/{num_epochs} (Train)"
+            train_loss, train_accuracy = self.__training_loop(train_loader, optimizer, description)
+            val_loss, val_accuracy = self.__validation_test_loop(val_loader)
 
             # Epoch Summary
-            train_loss = train_loss / total_train
-            val_loss = val_loss / total_val
-            train_accuracy = 100 * train_correct / total_train
-            val_accuracy = 100 * val_correct / total_val
+            print(f"\nEpoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%\n")
 
-            print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%")
-
-    def predict(self, data_loader, which: str = "Testing") -> float:
+    def predict(self, data_loader, which: str = "Test") -> Tuple[float]:
         """
-        Method that performs one forward pass across the data
-        Computes and returns accuracy
-        No gradient updates
-
-        TODO: Modularise and create a new method def testing_loop()
+        Computes and returns loss and accuracy on given (test) data
         """
         # Put model on device
         self.model.to(self.device)
 
-        # Set in evaluation mode
-        self.model.eval()
-
-        correct = 0
-        total = 0
-
-        with torch.no_grad():
-            for batch in tqdm(data_loader, desc=which):
-                inputs = batch["input_ids"].to(self.device)
-                attention_mask = batch["attention_mask"].to(self.device)
-                labels = batch["label"].to(self.device)
-
-                # Forward pass
-                outputs = self.model(inputs, attention_mask=attention_mask, labels=labels)
-
-                # Evaluate the batch
-                _, predicted = torch.max(outputs.logits, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-
-        # Compute accuracy
-        accuracy = 100 * correct / total
-        return accuracy
+        # Run validation/test loop once on the given data loader
+        return self.__validation_test_loop(data_loader, which)
 
 class SimpleFTModel(BaseModel):
     """
@@ -167,13 +151,14 @@ class SimpleFTModel(BaseModel):
     Keeps the entire network frozen
     Only unfreezes the last 2 layers and trains them
     """
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # Unfreeze the parameters in the pre_classifier and classifier layer
         self.__unfreeze_classification_head()
 
-    def __unfreeze_classification_head(self):
+    def __unfreeze_classification_head(self) -> None:
+        print("\n[DEBUG]Unfreezing classification head...\n")
         # Unfreeze pre_classifier
         for param in self.model.pre_classifier.parameters():
             param.requires_grad = True
@@ -192,7 +177,6 @@ class LoRA(torch.nn.Module):
 
     def forward(self, x):
         return self.alpha * (x @ self.A @ self.B)
-
 
 # Define the LinearLoRA layer
 class LinearLoRA(torch.nn.Module):
@@ -214,7 +198,7 @@ class LoRAModel(BaseModel):
         self, 
         lora_rank: int = 4, 
         lora_alpha: int = 8,
-    ):
+    ) -> None:
         super().__init__()
         self.lora_rank = lora_rank
         self.lora_alpha = lora_alpha
@@ -222,12 +206,12 @@ class LoRAModel(BaseModel):
         # Apply LoRA
         self.__apply_lora()
 
-    def __apply_lora(self):
+    def __apply_lora(self) -> None:
         """
         Method that applies the LinearLoRA layer to certain Linear layers
         within the network
         """
-        print("[DEBUG]Applying LoRA...")
+        print("\n[DEBUG]Applying LoRA...\n")
         linear_lora = partial(LinearLoRA, rank=self.lora_rank, alpha=self.lora_alpha)
 
         # Replace all Linear layers within the TransformerBlock with LinearLoRA
