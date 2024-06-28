@@ -6,6 +6,8 @@ import torch
 from tqdm import tqdm
 from functools import partial
 from typing import Tuple
+from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 class BaseModel:
     """
@@ -111,29 +113,51 @@ class BaseModel:
         self, 
         train_loader, 
         val_loader, 
-        num_epochs: int = 3,
-        learning_rate: float = 2e-5,
+        num_epochs: int = 10,
+        learning_rate: float = 2e-3,
+        patience: int = 2,
     ) -> None:
         """
         Method that trains the model for specified number of epochs with the optimizer
+        - Add early stopping (patience = 2) and dynamic learning rate schedule (patience = 1)
         """
         # Get trainable parameter count
         trainable_params, total_params = self.__get_parameter_count()
         print(f"\n% of trainable parameters: {(trainable_params / total_params * 100):.2f} %\n")
 
         # Define optimizer
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
+        optimizer = Adam(self.model.parameters(), lr=learning_rate)
+        scheduler = ReduceLROnPlateau(optimizer, 'min', patience=1)
         
         # Put model on device
         self.model.to(self.device)
 
+        best_val_loss = float('inf')
+        epochs_without_improvement = 0
+
         for epoch in range(num_epochs):
             description = f"Epoch {epoch+1}/{num_epochs} (Train)"
+            # Training loop
             train_loss, train_accuracy = self.__training_loop(train_loader, optimizer, description)
+
+            # Validation loop
             val_loss, val_accuracy = self.__validation_test_loop(val_loader)
 
             # Epoch Summary
-            print(f"\nEpoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%\n")
+            print(f"\nEpoch {epoch+1}/{num_epochs}, LR: {scheduler.get_last_lr()}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%\n")
+
+            # Update the learning rate scheduler
+            scheduler.step(val_loss)
+
+            # Early stopping check
+            if round(val_loss, 4) < round(best_val_loss, 4):
+                best_val_loss = val_loss
+                epochs_without_improvement = 0
+            else:
+                epochs_without_improvement += 1
+                if epochs_without_improvement >= patience:
+                    print(f"\n[DEBUG]Stopping early! Trained for {epoch + 1} / {num_epochs} epochs.\n")
+                    break
 
     def predict(self, data_loader, which: str = "Test") -> Tuple[float]:
         """
