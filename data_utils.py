@@ -22,12 +22,14 @@ class DatasetUtils:
         dataset_uri: str = "stanfordnlp/imdb", 
         model_uri: str = "distilbert/distilbert-base-uncased", 
         batch_size: int = 64, 
-        num_workers: int = 8
+        num_workers: int = 8,
+        seed: int = 42,
     ):
         self.dataset_uri = dataset_uri
         self.model_uri = model_uri
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.seed = seed
         
         self.dataset = None
         self.tokenized_dataset = None
@@ -37,7 +39,6 @@ class DatasetUtils:
 
         # Setup
         self.__setup()
-
 
     def __load(self):
         """
@@ -106,6 +107,9 @@ class DatasetUtils:
         )
 
     def __setup(self):
+        # Set seeds
+        transformers.set_seed(self.seed)
+
         # Load
         self.__load()
 
