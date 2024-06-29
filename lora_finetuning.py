@@ -66,5 +66,3 @@ lora_model.train(
 test_loss, test_accuracy = lora_model.predict(test_loader)
 print(f"Test Loss [LoRA]: {test_loss:.2f}")
 print(f"Test accuracy [LoRA]: {test_accuracy:.2f}%")
-
-
