@@ -114,8 +114,8 @@ class BaseModel:
         train_loader, 
         val_loader, 
         num_epochs: int = 10,
-        learning_rate: float = 2e-4,
-        patience: int = 2,
+        learning_rate: float = 3e-4,
+        patience: int = 3,
     ) -> None:
         """
         Method that trains the model for specified number of epochs with the optimizer
@@ -127,7 +127,13 @@ class BaseModel:
 
         # Define optimizer
         optimizer = Adam(self.model.parameters(), lr=learning_rate)
-        scheduler = ReduceLROnPlateau(optimizer, 'min', patience=1)
+        scheduler = ReduceLROnPlateau(
+            optimizer, 
+            'min', 
+            patience=1, 
+            threshold=1e-3, 
+            threshold_mode='abs'
+        )
         
         # Put model on device
         self.model.to(self.device)
