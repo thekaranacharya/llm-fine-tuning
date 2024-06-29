@@ -114,7 +114,7 @@ class BaseModel:
         train_loader, 
         val_loader, 
         num_epochs: int = 10,
-        learning_rate: float = 2e-3,
+        learning_rate: float = 2e-4,
         patience: int = 2,
     ) -> None:
         """
@@ -143,14 +143,15 @@ class BaseModel:
             # Validation loop
             val_loss, val_accuracy = self.__validation_test_loop(val_loader)
 
+            current_lr = learning_rate if epoch == 0 else scheduler.get_last_lr()
             # Epoch Summary
-            print(f"\nEpoch {epoch+1}/{num_epochs}, LR: {scheduler.get_last_lr()}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%\n")
+            print(f"\nEpoch {epoch+1}/{num_epochs}, LR: {current_lr}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%\n")
 
             # Update the learning rate scheduler
             scheduler.step(val_loss)
 
             # Early stopping check
-            if round(val_loss, 4) < round(best_val_loss, 4):
+            if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 epochs_without_improvement = 0
             else:
