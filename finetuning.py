@@ -49,28 +49,9 @@ print(f"Test Loss [Simple Fine-tuning]: {test_loss:.2f}")
 print(f"Test accuracy [Simple Fine-tuning]: {test_accuracy:.2f}%")
 
 ##########################
-# Test with LoRAModel
-lora_model = LoRAModel(
-    lora_rank=2,
-    lora_alpha=5
-)
-
-# Train the model
-lora_model.train(
-    train_loader,
-    val_loader,
-    num_epochs=10,
-)
-
-# Test performance on downstream task
-test_loss, test_accuracy = lora_model.predict(test_loader)
-print(f"Test Loss [LoRA]: {test_loss:.2f}")
-print(f"Test accuracy [LoRA]: {test_accuracy:.2f}%")
-
-##########################
-# Test with AdaptedModel
+# 3. Test with AdaptedModel
 adapted_model = AdaptedModel(
-    bottleneck_dim=32
+    bottleneck_dim=8
 )
 
 # Train the model
@@ -84,3 +65,22 @@ adapted_model.train(
 test_loss, test_accuracy = adapted_model.predict(test_loader)
 print(f"Test Loss [Adapted Model]: {test_loss:.2f}")
 print(f"Test accuracy [Adapted Model]: {test_accuracy:.2f}%")
+
+##########################
+# 4. Test with LoRAModel
+lora_model = LoRAModel(
+    lora_rank=8,
+    lora_alpha=4
+)
+
+# Train the model
+lora_model.train(
+    train_loader,
+    val_loader,
+    num_epochs=10,
+)
+
+# Test performance on downstream task
+test_loss, test_accuracy = lora_model.predict(test_loader)
+print(f"Test Loss [LoRA]: {test_loss:.2f}")
+print(f"Test accuracy [LoRA]: {test_accuracy:.2f}%")
