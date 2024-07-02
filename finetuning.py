@@ -60,7 +60,7 @@ start = time.time()
 train_loss, train_acc = simple_ft_model.train(
     train_loader,
     val_loader,
-    num_epochs=25,
+    num_epochs=1,
     learning_rate=8e-4
 )
 training_time = time.time() - start
@@ -94,7 +94,7 @@ start = time.time()
 train_loss, train_acc = adapted_model.train(
     train_loader,
     val_loader,
-    num_epochs=25,
+    num_epochs=1,
     learning_rate=8e-4
 )
 training_time = time.time() - start
@@ -129,7 +129,7 @@ start = time.time()
 train_loss, train_acc = lora_model.train(
     train_loader,
     val_loader,
-    num_epochs=25,
+    num_epochs=1,
     learning_rate=2e-5
 )
 training_time = time.time() - start
