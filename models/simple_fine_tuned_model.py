@@ -1,11 +1,13 @@
 from .base_model import BaseModel
 
+
 class SimpleFTModel(BaseModel):
     """
     Child class of BaseModel
     Keeps the entire network frozen
     Only unfreezes the last 2 layers and trains them
     """
+
     def __init__(self) -> None:
         super().__init__()
 

@@ -15,10 +15,7 @@ DATASET_NAME = "stanfordnlp/imdb"
 
 # Dataset ETL
 dataset_utils = DatasetUtils(
-    dataset_uri=DATASET_NAME,
-    model_uri=MODEL_NAME,
-    batch_size=64,
-    num_workers=8
+    dataset_uri=DATASET_NAME, model_uri=MODEL_NAME, batch_size=64, num_workers=8
 )
 
 train_loader = dataset_utils.get_data_loader("train")
@@ -31,11 +28,7 @@ training_times, trainable_params = {}, {}
 
 ##########################
 # 1. Test with BaseModel
-base_model = BaseModel(
-    model_uri=MODEL_NAME,
-    num_classes=2,
-    freeze_all=True
-)
+base_model = BaseModel(model_uri=MODEL_NAME, num_classes=2, freeze_all=True)
 
 # Test baseline performance on downstream task
 test_loss, test_acc = base_model.predict(test_loader)
@@ -58,10 +51,7 @@ print(f"\n% of trainable parameters: {trainable_params_percentage:.2f} %\n")
 start = time.time()
 # Train the model
 train_loss, train_acc = simple_ft_model.train(
-    train_loader,
-    val_loader,
-    num_epochs=1,
-    learning_rate=8e-4
+    train_loader, val_loader, num_epochs=1, learning_rate=8e-4
 )
 training_time = time.time() - start
 print(f"Training time: {training_time:.2f} seconds")
@@ -81,9 +71,7 @@ trainable_params["Simple Fine-tuning"] = round(trainable_params_percentage, 3)
 
 ##########################
 # 3. Test with AdaptedModel
-adapted_model = AdaptedModel(
-    bottleneck_dim=16
-)
+adapted_model = AdaptedModel(bottleneck_dim=16)
 
 # Get trainable parameter count
 trainable_params_percentage = adapted_model.get_parameter_count()
@@ -92,10 +80,7 @@ print(f"\n% of trainable parameters: {trainable_params_percentage:.2f} %\n")
 start = time.time()
 # Train the model
 train_loss, train_acc = adapted_model.train(
-    train_loader,
-    val_loader,
-    num_epochs=1,
-    learning_rate=8e-4
+    train_loader, val_loader, num_epochs=1, learning_rate=8e-4
 )
 training_time = time.time() - start
 print(f"Training time: {training_time:.2f} seconds")
@@ -115,10 +100,7 @@ trainable_params["Adapter"] = round(trainable_params_percentage, 3)
 
 ##########################
 # 4. Test with LoRAModel
-lora_model = LoRAModel(
-    lora_rank=16,
-    lora_alpha=16
-)
+lora_model = LoRAModel(lora_rank=16, lora_alpha=16)
 
 # Get trainable parameter count
 trainable_params_percentage = lora_model.get_parameter_count()
@@ -127,10 +109,7 @@ print(f"\n% of trainable parameters: {trainable_params_percentage:.2f} %\n")
 start = time.time()
 # Train the model
 train_loss, train_acc = lora_model.train(
-    train_loader,
-    val_loader,
-    num_epochs=1,
-    learning_rate=2e-5
+    train_loader, val_loader, num_epochs=1, learning_rate=2e-5
 )
 training_time = time.time() - start
 print(f"Training time: {training_time:.2f} seconds")
@@ -151,13 +130,11 @@ trainable_params["LoRA"] = round(trainable_params_percentage, 3)
 # Evaluation
 plotting_utils = PlottingUtils()
 plotting_utils.plot_training_curves(
-    train_losses=train_losses,
-    train_accuracies=train_accuracies
+    train_losses=train_losses, train_accuracies=train_accuracies
 )
 
 plotting_utils.plot_test_curves(
-    test_losses=test_losses,
-    test_accuracies=test_accuracies
+    test_losses=test_losses, test_accuracies=test_accuracies
 )
 
 plotting_utils.plot_training_times(training_times=training_times)

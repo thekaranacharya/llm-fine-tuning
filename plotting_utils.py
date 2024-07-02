@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 
+
 class PlottingUtils:
     def __init__(self, dir_path: str = "plots"):
         # Make directory to save plots if it doesn't exist
@@ -8,7 +9,6 @@ class PlottingUtils:
 
         if not os.path.exists(self.dir_path):
             os.makedirs(self.dir_path)
-
 
     def plot_training_curves(self, train_losses: dict, train_accuracies: dict):
         """
@@ -33,7 +33,6 @@ class PlottingUtils:
         plt.title("Training Accuracy for each strategy")
         plt.savefig(f"{self.dir_path}/training_accuracy.png")
         print("[DEBUG]Training accuracy plot saved.")
-
 
     def plot_test_curves(self, test_losses: dict, test_accuracies: dict):
         """

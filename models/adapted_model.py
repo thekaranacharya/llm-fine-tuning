@@ -2,6 +2,7 @@ import torch
 from .base_model import BaseModel
 from functools import partial
 
+
 # Define the Adapter layer
 class Adapter(torch.nn.Module):
     """
@@ -9,11 +10,16 @@ class Adapter(torch.nn.Module):
 
     Linear -> GELU -> Linear
     """
+
     def __init__(self, linear_out_dim: int, bottleneck_dim: int):
         super().__init__()
-        self.linear1 = torch.nn.Linear(linear_out_dim, bottleneck_dim)  # Feedforward down-project
+        self.linear1 = torch.nn.Linear(
+            linear_out_dim, bottleneck_dim
+        )  # Feedforward down-project
         self.gelu = torch.nn.GELU()  # non-linearity
-        self.linear2 = torch.nn.Linear(bottleneck_dim, linear_out_dim)  # Feedforward up-project
+        self.linear2 = torch.nn.Linear(
+            bottleneck_dim, linear_out_dim
+        )  # Feedforward up-project
 
     def forward(self, x):
         residual = x
@@ -21,11 +27,13 @@ class Adapter(torch.nn.Module):
         x = self.linear2(x)
         return x + residual
 
+
 # Define the AdaptedLinear layer
 class AdaptedLinear(torch.nn.Module):
     """
     Accepts a linear layer and adds an Adapter layer to it
     """
+
     def __init__(self, linear, bottleneck_dim):
         super().__init__()
         self.linear = linear
@@ -34,6 +42,7 @@ class AdaptedLinear(torch.nn.Module):
     def forward(self, x):
         x = self.linear(x)  # Normal linear layer propogation
         return self.adapter(x)  # Adapter layer propogation
+
 
 # Define the AdaptedModel class
 class AdaptedModel(BaseModel):
@@ -65,17 +74,17 @@ class AdaptedModel(BaseModel):
         - after the (out_lin) in (attention)
         - after the (lin2) in (ffn)
     """
+
     def __init__(
-        self, 
-        model_uri: str = "distilbert/distilbert-base-uncased", 
-        num_classes: int = 2, freeze_all: bool = True,
+        self,
+        model_uri: str = "distilbert/distilbert-base-uncased",
+        num_classes: int = 2,
+        freeze_all: bool = True,
         bottleneck_dim: int = 4,
     ):
         # Initialise parent class
         super().__init__(
-            model_uri=model_uri,
-            num_classes=num_classes, 
-            freeze_all=freeze_all
+            model_uri=model_uri, num_classes=num_classes, freeze_all=freeze_all
         )
 
         self.bottleneck_dim = bottleneck_dim
@@ -91,11 +100,11 @@ class AdaptedModel(BaseModel):
         for block in self.model.distilbert.transformer.layer:
             block.sa_layer_norm.requires_grad = True
             block.output_layer_norm.requires_grad = True
-        
+
         # Unfreeze final classifcation layer
         for param in self.model.classifier.parameters():
             param.requires_grad = True
-    
+
     def __adapt(self) -> None:
         """
         Method that replaces specific Linear layers with AdaptedLinear layers

@@ -2,17 +2,23 @@ import torch
 from .base_model import BaseModel
 from functools import partial
 
+
 # Define the LoRA layer
 class LoRA(torch.nn.Module):
     def __init__(self, in_dim, out_dim, rank, alpha):
         super().__init__()
-        self.A = torch.nn.Parameter(torch.randn(in_dim, rank))  # A.shape => (in_dim, rank)
-        self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))  # B.shape => (rank, out_dim)
+        self.A = torch.nn.Parameter(
+            torch.randn(in_dim, rank)
+        )  # A.shape => (in_dim, rank)
+        self.B = torch.nn.Parameter(
+            torch.zeros(rank, out_dim)
+        )  # B.shape => (rank, out_dim)
         self.alpha = alpha  # hyperparameter: refers to the degree to which to use "new" knowledge
         self.rank = rank
 
     def forward(self, x):
         return (self.alpha / self.rank) * (x @ self.A @ self.B)
+
 
 # Define the LinearLoRA layer
 class LinearLoRA(torch.nn.Module):
@@ -24,18 +30,20 @@ class LinearLoRA(torch.nn.Module):
     def forward(self, x):
         return self.linear(x) + self.lora(x)
 
+
 class LoRAModel(BaseModel):
     """
     Child class of BaseModel
     Applies Low-rank Adaptation (LoRA) parameter-efficient fine-tuning (PEFT)
     Linear layers are replaced by LinearLoRA layers
     """
+
     def __init__(
-        self, 
-        model_uri: str = "distilbert/distilbert-base-uncased", 
+        self,
+        model_uri: str = "distilbert/distilbert-base-uncased",
         num_classes: int = 2,
         freeze_all: bool = True,
-        lora_rank: int = 4, 
+        lora_rank: int = 4,
         lora_alpha: int = 8,
     ) -> None:
         # Initialise parent class
@@ -44,7 +52,7 @@ class LoRAModel(BaseModel):
         )
         self.lora_rank = lora_rank
         self.lora_alpha = lora_alpha
-    
+
         # Apply LoRA
         self.__apply_lora()
 
@@ -53,7 +61,7 @@ class LoRAModel(BaseModel):
         Method that applies the LinearLoRA layer to certain Linear layers
         within the network
 
-        Only adapt the linear layers in the Attention block as done in 
+        Only adapt the linear layers in the Attention block as done in
         [https://arxiv.org/pdf/2106.09685], keep MLP frozen
         """
         print("\n[DEBUG]Applying LoRA...\n")
