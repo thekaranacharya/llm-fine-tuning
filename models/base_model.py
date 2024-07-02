@@ -32,12 +32,13 @@ class BaseModel:
             for param in self.model.parameters():
                 param.requires_grad = False
 
-    def __get_parameter_count(self) -> Tuple[int]:
+    def get_parameter_count(self) -> Tuple[int]:
         """Method that returns trainable, and total parameter count"""
         total_param_count = sum(p.numel() for p in self.model.parameters())
         trainable_param_count = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        percentage_trainable = (trainable_param_count / total_param_count) * 100
 
-        return trainable_param_count, total_param_count
+        return percentage_trainable
 
     def __training_loop(self, train_loader, optimizer, description: str) -> Tuple[float]:
         """Training loop with PyTorch"""
@@ -112,15 +113,11 @@ class BaseModel:
         num_epochs: int = 10,
         learning_rate: float = 3e-4,
         es_patience: int = 5,
-    ) -> None:
+    ) -> Tuple[float]:
         """
         Method that trains the model for specified number of epochs with the optimizer
         - Add early stopping (es_patience = 5) and dynamic learning rate schedule (patience = 2)
         """
-        # Get trainable parameter count
-        trainable_params, total_params = self.__get_parameter_count()
-        print(f"\n% of trainable parameters: {(trainable_params / total_params * 100):.2f} %\n")
-
         # Define optimizer
         optimizer = Adam(self.model.parameters(), lr=learning_rate)
         scheduler = ReduceLROnPlateau(optimizer, patience=2)
@@ -155,6 +152,9 @@ class BaseModel:
                 if epochs_without_improvement >= es_patience:
                     print(f"\n[DEBUG]Stopping early! Trained for {epoch + 1} / {num_epochs} epochs.\n")
                     break
+        
+        # Return final training loss and accuracy
+        return train_loss, train_accuracy
 
     def predict(self, data_loader, which: str = "Test") -> Tuple[float]:
         """
