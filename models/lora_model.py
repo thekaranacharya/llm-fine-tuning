@@ -52,6 +52,9 @@ class LoRAModel(BaseModel):
         """
         Method that applies the LinearLoRA layer to certain Linear layers
         within the network
+
+        Only adapt the linear layers in the Attention block as done in 
+        [https://arxiv.org/pdf/2106.09685], keep MLP frozen
         """
         print("\n[DEBUG]Applying LoRA...\n")
         linear_lora = partial(LinearLoRA, rank=self.lora_rank, alpha=self.lora_alpha)
@@ -59,10 +62,7 @@ class LoRAModel(BaseModel):
         # Replace all Linear layers within the TransformerBlock with LinearLoRA
         for block in self.model.distilbert.transformer.layer:
             ## Transformer Block: Multi-head Self-Attention block
+            block.attention.q_lin = linear_lora(block.attention.q_lin)
+            block.attention.k_lin = linear_lora(block.attention.k_lin)
+            block.attention.v_lin = linear_lora(block.attention.v_lin)
             block.attention.out_lin = linear_lora(block.attention.out_lin)
-
-            ## Transformer Block: Feed-forward block
-            block.ffn.lin2 = linear_lora(block.ffn.lin2)
-
-        # Replace classifier with LinearLoRA
-        self.model.classifier = linear_lora(self.model.classifier)
