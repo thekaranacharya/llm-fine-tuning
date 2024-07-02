@@ -79,20 +79,12 @@ class AdaptedModel(BaseModel):
         )
 
         self.bottleneck_dim = bottleneck_dim
-
-        # print(f"[DEBUG]Before adding Adapters:\n{self.get_transformer_block()}\n")
         self.__adapt()
-        # print(f"[DEBUG]After adding Adapters:\n{self.get_transformer_block()}\n")
-
-    # def get_transformer_block(self):
-    #     """
-    #     Method that returns the TransformerBlock architecture
-    #     """
-    #     return self.model.distilbert.transformer.layer[0]
 
     def __unfreeze_specific_layers(self) -> None:
         """
         Method that unfreezes specific layers in the model
+        as defined in the paper
         """
         print("\n[DEBUG]Unfreezing specific layers...\n")
         # Unfreeze (sa_layer_norm) and (output_layer_norm) in each TransformerBlock
