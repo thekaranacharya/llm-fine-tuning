@@ -52,7 +52,7 @@ print(f"Test accuracy [Simple Fine-tuning]: {test_accuracy:.2f}%")
 ##########################
 # 3. Test with AdaptedModel
 adapted_model = AdaptedModel(
-    bottleneck_dim=8
+    bottleneck_dim=16
 )
 
 # Train the model
@@ -71,8 +71,8 @@ print(f"Test accuracy [Adapted Model]: {test_accuracy:.2f}%")
 ##########################
 # 4. Test with LoRAModel
 lora_model = LoRAModel(
-    lora_rank=8,
-    lora_alpha=8
+    lora_rank=16,
+    lora_alpha=16
 )
 
 # Train the model
