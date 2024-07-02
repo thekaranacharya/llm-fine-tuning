@@ -115,7 +115,7 @@ class BaseModel:
     ) -> None:
         """
         Method that trains the model for specified number of epochs with the optimizer
-        - Add early stopping (patience = 2) and dynamic learning rate schedule (patience = 1)
+        - Add early stopping (patience = 3) and dynamic learning rate schedule (patience = 1)
         """
         # Get trainable parameter count
         trainable_params, total_params = self.__get_parameter_count()
