@@ -8,7 +8,7 @@ from rich import print
 import time
 from data_utils import DatasetUtils
 from models import BaseModel, SimpleFTModel, LoRAModel, AdaptedModel
-from eval_utils import EvalUtils
+from plotting_utils import PlottingUtils
 
 MODEL_NAME = "distilbert/distilbert-base-uncased"
 DATASET_NAME = "stanfordnlp/imdb"
@@ -149,16 +149,16 @@ training_times["LoRA"] = round(training_time, 3)
 trainable_params["LoRA"] = round(trainable_params_percentage, 3)
 
 # Evaluation
-eval_utils = EvalUtils()
-eval_utils.plot_training_curves(
+plotting_utils = PlottingUtils()
+plotting_utils.plot_training_curves(
     train_losses=train_losses,
     train_accuracies=train_accuracies
 )
 
-eval_utils.plot_test_curves(
+plotting_utils.plot_test_curves(
     test_losses=test_losses,
     test_accuracies=test_accuracies
 )
 
-eval_utils.plot_training_times(training_times=training_times)
-eval_utils.plot_trainable_params(trainable_params=trainable_params)
+plotting_utils.plot_training_times(training_times=training_times)
+plotting_utils.plot_trainable_params(trainable_params=trainable_params)

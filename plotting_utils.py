@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 
-class EvalUtils:
+class PlottingUtils:
     def __init__(self, dir_path: str = "plots"):
         # Make directory to save plots if it doesn't exist
         self.dir_path = dir_path
