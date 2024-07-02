@@ -9,11 +9,11 @@ class Adapter(torch.nn.Module):
 
     Linear -> GELU -> Linear
     """
-    def __init__(self, in_dim: int, out_dim: int, bottleneck_dim: int):
+    def __init__(self, linear_out_dim: int, bottleneck_dim: int):
         super().__init__()
-        self.linear1 = torch.nn.Linear(in_dim, bottleneck_dim)  # Feedforward down-project
+        self.linear1 = torch.nn.Linear(linear_out_dim, bottleneck_dim)  # Feedforward down-project
         self.gelu = torch.nn.GELU()  # non-linearity
-        self.linear2 = torch.nn.Linear(bottleneck_dim, out_dim)  # Feedforward up-project
+        self.linear2 = torch.nn.Linear(bottleneck_dim, linear_out_dim)  # Feedforward up-project
 
     def forward(self, x):
         residual = x
@@ -29,7 +29,7 @@ class AdaptedLinear(torch.nn.Module):
     def __init__(self, linear, bottleneck_dim):
         super().__init__()
         self.linear = linear
-        self.adapter = Adapter(linear.in_features, linear.out_features, bottleneck_dim)
+        self.adapter = Adapter(linear.out_features, bottleneck_dim)
 
     def forward(self, x):
         x = self.linear(x)  # Normal linear layer propogation
