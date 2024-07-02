@@ -70,7 +70,7 @@ print(f"Test accuracy [LoRA]: {test_accuracy:.2f}%")
 ##########################
 # Test with AdaptedModel
 adapted_model = AdaptedModel(
-    bottleneck_dim=4
+    bottleneck_dim=32
 )
 
 # Train the model
