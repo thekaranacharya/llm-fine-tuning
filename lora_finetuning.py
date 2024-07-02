@@ -1,7 +1,7 @@
 # Imports
 from rich import print
 from data_utils import DatasetUtils
-from model_utils import BaseModel, SimpleFTModel, LoRAModel
+from models import BaseModel, SimpleFTModel, LoRAModel, AdaptedModel
 
 MODEL_NAME = "distilbert/distilbert-base-uncased"
 DATASET_NAME = "stanfordnlp/imdb"
@@ -66,3 +66,21 @@ lora_model.train(
 test_loss, test_accuracy = lora_model.predict(test_loader)
 print(f"Test Loss [LoRA]: {test_loss:.2f}")
 print(f"Test accuracy [LoRA]: {test_accuracy:.2f}%")
+
+##########################
+# Test with AdaptedModel
+adapted_model = AdaptedModel(
+    bottleneck_dim=4
+)
+
+# Train the model
+adapted_model.train(
+    train_loader,
+    val_loader,
+    num_epochs=10,
+)
+
+# Test performance on downstream task
+test_loss, test_accuracy = adapted_model.predict(test_loader)
+print(f"Test Loss [Adapted Model]: {test_loss:.2f}")
+print(f"Test accuracy [Adapted Model]: {test_accuracy:.2f}%")
