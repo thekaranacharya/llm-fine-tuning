@@ -40,7 +40,8 @@ simple_ft_model = SimpleFTModel()
 simple_ft_model.train(
     train_loader,
     val_loader,
-    num_epochs=10,
+    num_epochs=25,
+    learning_rate=8e-4
 )
 
 # Test performance on downstream task
@@ -58,7 +59,8 @@ adapted_model = AdaptedModel(
 adapted_model.train(
     train_loader,
     val_loader,
-    num_epochs=10,
+    num_epochs=25,
+    learning_rate=8e-4
 )
 
 # Test performance on downstream task
@@ -70,14 +72,15 @@ print(f"Test accuracy [Adapted Model]: {test_accuracy:.2f}%")
 # 4. Test with LoRAModel
 lora_model = LoRAModel(
     lora_rank=8,
-    lora_alpha=4
+    lora_alpha=8
 )
 
 # Train the model
 lora_model.train(
     train_loader,
     val_loader,
-    num_epochs=10,
+    num_epochs=25,
+    learning_rate=2e-5
 )
 
 # Test performance on downstream task
