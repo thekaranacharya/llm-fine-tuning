@@ -123,13 +123,7 @@ class BaseModel:
 
         # Define optimizer
         optimizer = Adam(self.model.parameters(), lr=learning_rate)
-        scheduler = ReduceLROnPlateau(
-            optimizer, 
-            'min', 
-            patience=1, 
-            threshold=1e-3, 
-            threshold_mode='abs'
-        )
+        scheduler = ReduceLROnPlateau(optimizer, patience=1)
         
         # Put model on device
         self.model.to(self.device)
