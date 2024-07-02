@@ -145,7 +145,7 @@ class BaseModel:
             # Validation loop
             val_loss, val_accuracy = self.__validation_test_loop(val_loader)
 
-            current_lr = learning_rate if epoch == 0 else scheduler.get_last_lr()
+            current_lr = learning_rate if epoch == 0 else scheduler.get_last_lr()[0]
             # Epoch Summary
             print(f"\nEpoch {epoch+1}/{num_epochs}, LR: {current_lr}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%\n")
 
