@@ -9,9 +9,10 @@ class LoRA(torch.nn.Module):
         self.A = torch.nn.Parameter(torch.randn(in_dim, rank))  # A.shape => (in_dim, rank)
         self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))  # B.shape => (rank, out_dim)
         self.alpha = alpha  # hyperparameter: refers to the degree to which to use "new" knowledge
+        self.rank = rank
 
     def forward(self, x):
-        return self.alpha * (x @ self.A @ self.B)
+        return (self.alpha / self.rank) * (x @ self.A @ self.B)
 
 # Define the LinearLoRA layer
 class LinearLoRA(torch.nn.Module):
