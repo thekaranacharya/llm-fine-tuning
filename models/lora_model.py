@@ -58,15 +58,10 @@ class LoRAModel(BaseModel):
         # Replace all Linear layers within the TransformerBlock with LinearLoRA
         for block in self.model.distilbert.transformer.layer:
             ## Transformer Block: Multi-head Self-Attention block
-            # block.attention.q_lin = linear_lora(block.attention.q_lin)
-            # block.attention.k_lin = linear_lora(block.attention.k_lin)
-            # block.attention.v_lin = linear_lora(block.attention.v_lin)
             block.attention.out_lin = linear_lora(block.attention.out_lin)
 
-            # Transformer Block: Feed-forward block
-            block.ffn.lin1 = linear_lora(block.ffn.lin1)
+            ## Transformer Block: Feed-forward block
             block.ffn.lin2 = linear_lora(block.ffn.lin2)
 
-        # Replace pre_classifier and classifier with LinearLoRA
-        self.model.pre_classifier = linear_lora(self.model.pre_classifier)
+        # Replace classifier with LinearLoRA
         self.model.classifier = linear_lora(self.model.classifier)
