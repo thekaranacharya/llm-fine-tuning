@@ -111,11 +111,11 @@ class BaseModel:
         val_loader, 
         num_epochs: int = 10,
         learning_rate: float = 3e-4,
-        patience: int = 3,
+        es_patience: int = 5,
     ) -> None:
         """
         Method that trains the model for specified number of epochs with the optimizer
-        - Add early stopping (patience = 3) and dynamic learning rate schedule (patience = 1)
+        - Add early stopping (es_patience = 5) and dynamic learning rate schedule (patience = 2)
         """
         # Get trainable parameter count
         trainable_params, total_params = self.__get_parameter_count()
@@ -123,7 +123,7 @@ class BaseModel:
 
         # Define optimizer
         optimizer = Adam(self.model.parameters(), lr=learning_rate)
-        scheduler = ReduceLROnPlateau(optimizer, patience=1)
+        scheduler = ReduceLROnPlateau(optimizer, patience=2)
         
         # Put model on device
         self.model.to(self.device)
@@ -152,7 +152,7 @@ class BaseModel:
                 epochs_without_improvement = 0
             else:
                 epochs_without_improvement += 1
-                if epochs_without_improvement >= patience:
+                if epochs_without_improvement >= es_patience:
                     print(f"\n[DEBUG]Stopping early! Trained for {epoch + 1} / {num_epochs} epochs.\n")
                     break
 
