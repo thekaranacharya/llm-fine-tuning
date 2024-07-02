@@ -1,10 +1,6 @@
-"""
-Module that holds all utilities modeling-related
-"""
 from transformers import AutoModelForSequenceClassification
 import torch
 from tqdm import tqdm
-from functools import partial
 from typing import Tuple
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -175,89 +171,3 @@ class BaseModel:
 
         # Run validation/test loop once on the given data loader
         return self.__validation_test_loop(data_loader, which)
-
-class SimpleFTModel(BaseModel):
-    """
-    Child class of BaseModel
-    Keeps the entire network frozen
-    Only unfreezes the last 2 layers and trains them
-    """
-    def __init__(self) -> None:
-        super().__init__()
-
-        # Unfreeze the parameters in the pre_classifier and classifier layer
-        self.__unfreeze_classification_head()
-
-    def __unfreeze_classification_head(self) -> None:
-        print("\n[DEBUG]Unfreezing classification head...\n")
-        # Unfreeze pre_classifier
-        for param in self.model.pre_classifier.parameters():
-            param.requires_grad = True
-
-        # Unfreeze classifier
-        for param in self.model.classifier.parameters():
-            param.requires_grad = True
-
-
-class LoRA(torch.nn.Module):
-    def __init__(self, in_dim, out_dim, rank, alpha):
-        super().__init__()
-        self.A = torch.nn.Parameter(torch.randn(in_dim, rank))  # A.shape => (in_dim, rank)
-        self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))  # B.shape => (rank, out_dim)
-        self.alpha = alpha  # hyperparameter: refers to the degree to which to use "new" knowledge
-
-    def forward(self, x):
-        return self.alpha * (x @ self.A @ self.B)
-
-# Define the LinearLoRA layer
-class LinearLoRA(torch.nn.Module):
-    def __init__(self, linear, rank, alpha):
-        super().__init__()
-        self.linear = linear
-        self.lora = LoRA(linear.in_features, linear.out_features, rank, alpha)
-
-    def forward(self, x):
-        return self.linear(x) + self.lora(x)
-
-class LoRAModel(BaseModel):
-    """
-    Child class of BaseModel
-    Applies Low-rank Adaptation (LoRA) parameter-efficient fine-tuning (PEFT)
-    Linear layers are replaced by LinearLoRA layers
-    """
-    def __init__(
-        self, 
-        lora_rank: int = 4, 
-        lora_alpha: int = 8,
-    ) -> None:
-        super().__init__()
-        self.lora_rank = lora_rank
-        self.lora_alpha = lora_alpha
-    
-        # Apply LoRA
-        self.__apply_lora()
-
-    def __apply_lora(self) -> None:
-        """
-        Method that applies the LinearLoRA layer to certain Linear layers
-        within the network
-        """
-        print("\n[DEBUG]Applying LoRA...\n")
-        linear_lora = partial(LinearLoRA, rank=self.lora_rank, alpha=self.lora_alpha)
-
-        # Replace all Linear layers within the TransformerBlock with LinearLoRA
-        for block in self.model.distilbert.transformer.layer:
-            ## Transformer Block: Multi-head Self-Attention block
-            # block.attention.q_lin = linear_lora(block.attention.q_lin)
-            # block.attention.k_lin = linear_lora(block.attention.k_lin)
-            # block.attention.v_lin = linear_lora(block.attention.v_lin)
-            # block.attention.out_lin = linear_lora(block.attention.out_lin)
-
-            # Transformer Block: Feed-forward block
-            block.ffn.lin1 = linear_lora(block.ffn.lin1)
-            block.ffn.lin2 = linear_lora(block.ffn.lin2)
-
-        # Replace pre_classifier and classifier with LinearLoRA
-        self.model.pre_classifier = linear_lora(self.model.pre_classifier)
-        self.model.classifier = linear_lora(self.model.classifier)
-
