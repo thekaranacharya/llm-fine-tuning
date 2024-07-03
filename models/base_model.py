@@ -135,6 +135,8 @@ class BaseModel:
         # Put model on device
         self.model.to(self.device)
 
+        # Initialize variables
+        best_train_loss, best_train_acc = 0.0, 0.0
         best_val_loss = float("inf")
         epochs_without_improvement = 0
 
@@ -159,23 +161,44 @@ class BaseModel:
 
             # Early stopping check
             if val_loss < best_val_loss:
+                # Update best validation loss
                 best_val_loss = val_loss
+
+                # Save the model
+                torch.save(
+                    self.model.state_dict(),
+                    f"model_{self.__class__.__name__.lower()}_best.pt",
+                )
+
+                # Update best training loss and accuracy as well
+                best_train_loss = train_loss
+                best_train_acc = train_accuracy
+
+                # Reset epochs without improvement
                 epochs_without_improvement = 0
             else:
+                # Increment epochs without improvement
                 epochs_without_improvement += 1
+
+                # Check for early stopping
                 if epochs_without_improvement >= es_patience:
                     print(
                         f"\n[DEBUG]Stopping early! Trained for {epoch + 1} / {num_epochs} epochs.\n"
                     )
                     break
 
-        # Return final training loss and accuracy
-        return train_loss, train_accuracy
+        # Return best training loss and accuracy
+        return best_train_loss, best_train_acc
 
     def predict(self, data_loader, which: str = "Test") -> Tuple[float]:
         """
         Computes and returns loss and accuracy on given (test) data
         """
+        # Load the best model
+        self.model.load_state_dict(
+            torch.load(f"model_{self.__class__.__name__.lower()}_best.pt")
+        )
+
         # Put model on device
         self.model.to(self.device)
 
