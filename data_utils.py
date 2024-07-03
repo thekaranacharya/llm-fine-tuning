@@ -1,5 +1,7 @@
 """
-Module that holds utilities all things-dataset
+Dataset ETL Utilities
+References:
+- https://lightning.ai/lightning-ai/studios/code-lora-from-scratch?tab=overview
 """
 
 # Imports
@@ -28,7 +30,20 @@ class DatasetUtils:
         batch_size: int = 64,
         num_workers: int = 8,
         seed: int = 42,
-    ):
+    ) -> None:
+        """
+        Args:
+            dataset_uri: str
+                Huggingface URI of the dataset to be used
+            model_uri: str
+                URI of the pre-trained model to be used
+            batch_size: int
+                Batch size for the dataloaders
+            num_workers: int
+                Number of workers for the dataloaders
+            seed: int
+                Seed for reproducibility
+        """
         self.dataset_uri = dataset_uri
         self.model_uri = model_uri
         self.batch_size = batch_size
@@ -92,6 +107,7 @@ class DatasetUtils:
 
     def __setup_dataloaders(self):
         """Method to setup all the dataloaders"""
+
         print("[DEBUG]Setting up the dataloaders...")
         # Define dataset objects for each partition
         train_tokenized_dataset = CustomDataset(
@@ -121,6 +137,9 @@ class DatasetUtils:
         )
 
     def __setup(self):
+        """
+        Method to setup the dataset and dataloaders
+        """
         # Set seeds
         transformers.set_seed(self.seed)
 
@@ -135,6 +154,17 @@ class DatasetUtils:
         print("[DEBUG]Data setup complete.")
 
     def get_data_loader(self, which: str = "train"):
+        """
+        Method to get the dataloader for the specified partition
+
+        Args:
+            which: str
+                Partition to get the dataloader for
+                One of ("train", "val", "test")
+
+        Returns:
+            DataLoader: DataLoader for the specified partition
+        """
         allowed = ("train", "val", "test")
         if which not in allowed:
             raise ValueError(

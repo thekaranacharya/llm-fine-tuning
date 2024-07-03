@@ -14,6 +14,7 @@ from evaluation import EvaluationUtils
 MODEL_NAME = "distilbert/distilbert-base-uncased"
 DATASET_NAME = "stanfordnlp/imdb"
 NUM_EPOCHS = 2
+
 MODEL_MAP = {
     "Baseline": {
         "model": BaseModel(model_uri=MODEL_NAME, num_classes=2, freeze_all=True),
@@ -33,13 +34,35 @@ training_times, trainable_params = {}, {}
 
 
 # Helper methods
-def get_time_in_hours(seconds) -> float:
-    """Return time in hours given seconds."""
+def get_time_in_hours(seconds: int) -> float:
+    """
+    Return time in hours given seconds.
+
+    Args:
+        seconds: int
+            Time in seconds
+
+    Returns:
+        float
+            Time in hours
+    """
     return seconds / 3600
 
 
-def run_model(model_name, train_loader, val_loader, test_loader):
-    """Fine-tune the model (if not Baseline) and test the model on the downstream task."""
+def run_model(model_name, train_loader, val_loader, test_loader) -> None:
+    """
+    Fine-tune the model (if not Baseline) and test the model on the downstream task.
+
+    Args:
+        model_name: str
+            Name of the model
+        train_loader: DataLoader
+            DataLoader for the training set
+        val_loader: DataLoader
+            DataLoader for the validation set
+        test_loader: DataLoader
+            DataLoader for the test set
+    """
     # Get model and initial learning rate
     model = MODEL_MAP[model_name].get("model")
     initial_lr = MODEL_MAP[model_name].get("initial_lr")
@@ -80,7 +103,7 @@ def run_model(model_name, train_loader, val_loader, test_loader):
     test_accuracies[model_name] = test_acc
 
 
-def compute_results(outputs_path: str = "outputs/"):
+def compute_results(outputs_path: str = "outputs/") -> None:
     """
     Compute results.
 
@@ -88,6 +111,9 @@ def compute_results(outputs_path: str = "outputs/"):
     and trainable parameters to outputs/results.json
     - Create and save plots to outputs/plots/
 
+    Args:
+        outputs_path: str
+            Path to the outputs directory
     """
     print("\n\nComputing results...\n")
     evaluation_utils = EvaluationUtils(

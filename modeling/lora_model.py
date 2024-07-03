@@ -1,3 +1,12 @@
+"""
+Implements Low-rank Adaptation (LoRA) parameter-efficient fine-tuning (PEFT)
+
+References:
+- https://lightning.ai/lightning-ai/studios/code-lora-from-scratch?tab=overview
+- https://lightning.ai/pages/community/article/lora-llm/
+- https://arxiv.org/pdf/2106.09685 (LoRA paper)
+"""
+
 import torch
 from .base_model import BaseModel
 from functools import partial
@@ -5,7 +14,18 @@ from functools import partial
 
 # Define the LoRA layer
 class LoRA(torch.nn.Module):
-    def __init__(self, in_dim, out_dim, rank, alpha):
+    def __init__(self, in_dim, out_dim, rank, alpha) -> None:
+        """
+        Args:
+            in_dim: int
+                Input dimension of the LoRA layer
+            out_dim: int
+                Output dimension of the LoRA layer
+            rank: int
+                Rank of the LoRA layer
+            alpha: int
+                Hyperparameter that refers to the degree to which to use "new" knowledge
+        """
         super().__init__()
         self.A = torch.nn.Parameter(
             torch.randn(in_dim, rank)
@@ -13,27 +33,41 @@ class LoRA(torch.nn.Module):
         self.B = torch.nn.Parameter(
             torch.zeros(rank, out_dim)
         )  # B.shape => (rank, out_dim)
-        self.alpha = alpha  # hyperparameter: refers to the degree to which to use "new" knowledge
+        self.alpha = alpha
         self.rank = rank
 
     def forward(self, x):
+        """
+        Forward propogation of the LoRA layer
+        """
         return (self.alpha / self.rank) * (x @ self.A @ self.B)
 
 
 # Define the LinearLoRA layer
 class LinearLoRA(torch.nn.Module):
-    def __init__(self, linear, rank, alpha):
+    def __init__(self, linear, rank, alpha) -> None:
+        """
+        Args:
+            linear: torch.nn.Linear
+                Linear layer to which the LoRA layer is to be added
+            rank: int
+                Rank of the LoRA layer
+            alpha: int
+                Hyperparameter that refers to the degree to which to use "new" knowledge
+        """
         super().__init__()
         self.linear = linear
         self.lora = LoRA(linear.in_features, linear.out_features, rank, alpha)
 
     def forward(self, x):
+        """
+        Forward propogation of the LinearLoRA layer
+        """
         return self.linear(x) + self.lora(x)
 
 
 class LoRAModel(BaseModel):
     """
-    Child class of BaseModel
     Applies Low-rank Adaptation (LoRA) parameter-efficient fine-tuning (PEFT)
     Linear layers are replaced by LinearLoRA layers
     """
@@ -46,6 +80,19 @@ class LoRAModel(BaseModel):
         lora_rank: int = 4,
         lora_alpha: int = 8,
     ) -> None:
+        """
+        Args:
+            model_uri: str
+                Huggingface URI of the pre-trained model
+            num_classes: int
+                Number of classes in the dataset
+            freeze_all: bool
+                Flag to freeze all the layers of the model
+            lora_rank: int
+                Rank of the LoRA layer
+            lora_alpha: int
+                Hyperparameter that refers to the degree to which to use "new" knowledge
+        """
         # Initialise parent class
         super().__init__(
             model_uri=model_uri, num_classes=num_classes, freeze_all=freeze_all
@@ -61,8 +108,8 @@ class LoRAModel(BaseModel):
         Method that applies the LinearLoRA layer to certain Linear layers
         within the network
 
-        Only adapt the linear layers in the Attention block as done in
-        [https://arxiv.org/pdf/2106.09685], keep MLP frozen
+        Only adapt the linear layers in the Attention block as per the paper,
+        keep layers in the MLP frozen
         """
         print("\n[DEBUG]Applying LoRA...\n")
         linear_lora = partial(LinearLoRA, rank=self.lora_rank, alpha=self.lora_alpha)

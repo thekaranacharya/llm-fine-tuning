@@ -1,3 +1,10 @@
+"""
+This file contains the EvaluationUtils class
+This class is used to evaluate the results of the PEFT techniques
+It saves the results to a JSON file and plots the results
+"""
+
+# Imports
 import matplotlib.pyplot as plt
 import os
 import json
@@ -13,14 +20,30 @@ class EvaluationUtils:
         train_accuracies: dict = None,
         training_times: dict = None,
         trainable_params: dict = None,
-    ):
+    ) -> None:
+        """
+        Args:
+            dir_path: str
+                Path to the directory where the results are to be saved
+            test_losses: dict
+                Dictionary containing the test losses for each PEFT technique
+            test_accuracies: dict
+                Dictionary containing the test accuracies for each PEFT technique
+            train_losses: dict
+                Dictionary containing the training losses for each PEFT technique
+            train_accuracies: dict
+                Dictionary containing the training accuracies for each PEFT technique
+            training_times: dict
+                Dictionary containing the training times for each PEFT technique
+            trainable_params: dict
+                Dictionary containing the % of trainable parameters for each PEFT technique
+        """
         # Make directory to save plots if it doesn't exist
         self.dir_path = dir_path
         self.plots_path = f"{self.dir_path}/plots"
 
         # Create the directory if it doesn't exist
-        if not os.path.exists(self.plots_path):
-            os.makedirs(self.plots_path)
+        os.makedirs(self.plots_path, exist_ok=True)
 
         self.test_losses = test_losses
         self.test_accuracies = test_accuracies

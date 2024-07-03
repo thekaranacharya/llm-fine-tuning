@@ -1,9 +1,16 @@
+"""
+Base class for a pre-trained frozen model
+Implements training loop, validation loop and testing loop
+in Pytorch.
+"""
+
 from transformers import AutoModelForSequenceClassification
 import torch
 from tqdm import tqdm
 from typing import Tuple
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+import os
 
 
 class BaseModel:
@@ -17,12 +24,19 @@ class BaseModel:
         num_classes: int = 2,
         freeze_all: bool = True,
     ) -> None:
+        """
+        Args:
+            model_uri: str
+                Huggingface URI of the pre-trained model
+            num_classes: int
+                Number of classes in the dataset
+            freeze_all: bool
+                Flag to freeze all the layers of the model
+        """
         self.model_uri = model_uri
         self.num_classes = num_classes
         self.freeze_all = freeze_all
-        self.saved_model_path = (
-            f"checkpoints/model_{self.__class__.__name__.lower()}_best.pt"
-        )
+        self.saved_model_path = f"checkpoints/{self.__class__.__name__.lower()}_best.pt"
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"\nUsing device: {self.device}\n")
 
@@ -36,11 +50,20 @@ class BaseModel:
             for param in self.model.parameters():
                 param.requires_grad = False
 
+        # Create the checkpoint directory if it doesn't exist
+        os.makedirs("checkpoints", exist_ok=True)
+
         # Save the model
         torch.save(self.model.state_dict(), self.saved_model_path)
 
-    def get_parameter_count(self) -> Tuple[int]:
-        """Method that returns trainable, and total parameter count"""
+    def get_parameter_count(self) -> float:
+        """
+        Method that returns trainable, and total parameter count
+
+        Returns:
+            percentage_trainable: float
+                Percentage of trainable parameters
+        """
         total_param_count = sum(p.numel() for p in self.model.parameters())
         trainable_param_count = sum(
             p.numel() for p in self.model.parameters() if p.requires_grad
@@ -52,7 +75,23 @@ class BaseModel:
     def __training_loop(
         self, train_loader, optimizer, description: str
     ) -> Tuple[float]:
-        """Training loop with PyTorch"""
+        """
+        One epoch of training
+
+        Args:
+            train_loader: DataLoader
+                DataLoader for training data
+            optimizer: Optimizer
+                Optimizer for the model
+            description: str
+                Description for tqdm
+
+        Returns:
+            train_loss: float
+                Training loss for the epoch
+            train_accuracy: float
+                Training accuracy for the epoch
+        """
         # Training Phase
         self.model.train()
 
@@ -90,7 +129,21 @@ class BaseModel:
     def __validation_test_loop(
         self, val_test_loader, which: str = "Validation"
     ) -> Tuple[float]:
-        """Validation / Testing loop with PyTorch"""
+        """
+        One epoch of validation or testing
+
+        Args:
+            val_test_loader: DataLoader
+                DataLoader for validation or test data
+            which: str
+                Description for tqdm
+
+        Returns:
+            val_loss: float
+                Validation/Test loss for the epoch
+            val_accuracy: float
+                Validation/Test accuracy for the epoch
+        """
         # Validation Phase
         self.model.eval()
 
@@ -132,6 +185,25 @@ class BaseModel:
         """
         Method that trains the model for specified number of epochs with the optimizer
         - Add early stopping (es_patience = 5) and dynamic learning rate schedule (patience = 2)
+        - Save the best model based on validation loss
+
+        Args:
+            train_loader: DataLoader
+                DataLoader for training data
+            val_loader: DataLoader
+                DataLoader for validation data
+            num_epochs: int
+                Number of epochs to train the model
+            learning_rate: float
+                Learning rate for the optimizer
+            es_patience: int
+                Early stopping patience
+
+        Returns:
+            best_train_loss: float
+                Best training loss
+            best_train_acc: float
+                Best training accuracy
         """
         # Define optimizer
         optimizer = Adam(self.model.parameters(), lr=learning_rate)
@@ -195,6 +267,19 @@ class BaseModel:
     def predict(self, data_loader, which: str = "Test") -> Tuple[float]:
         """
         Computes and returns loss and accuracy on given (test) data
+        Loads the best model, puts it on device and runs the validation/test loop
+
+        Args:
+            data_loader: DataLoader
+                DataLoader for test data
+            which: str
+                Description for tqdm
+
+        Returns:
+            test_loss: float
+                Test loss
+            test_accuracy: float
+                Test accuracy
         """
         # Load the best model
         self.model.load_state_dict(torch.load(self.saved_model_path))

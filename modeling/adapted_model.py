@@ -1,3 +1,9 @@
+"""
+Implementation of 'Adapter' layers as described in the paper:
+"Parameter-Efficient Transfer Learning for NLP" by M. Houlsby et al.
+Link to paper: [https://arxiv.org/pdf/1902.00751]
+"""
+
 import torch
 from .base_model import BaseModel
 from functools import partial
@@ -6,12 +12,20 @@ from functools import partial
 # Define the Adapter layer
 class Adapter(torch.nn.Module):
     """
-    Implements Adapter layer as described in [https://arxiv.org/pdf/1902.00751]
+    Implements Adapter layer as described in the paper.
 
-    Linear -> GELU -> Linear
+    Architecture:
+    Linear (down-projection) -> GELU(non-linearity) -> Linear(up-projection)
     """
 
     def __init__(self, linear_out_dim: int, bottleneck_dim: int):
+        """
+        Args:
+            linear_out_dim: int
+                Output dimension of the linear layer
+            bottleneck_dim: int
+                Dimension of the bottleneck layer
+        """
         super().__init__()
         self.linear1 = torch.nn.Linear(
             linear_out_dim, bottleneck_dim
@@ -22,6 +36,9 @@ class Adapter(torch.nn.Module):
         )  # Feedforward up-project
 
     def forward(self, x):
+        """
+        Forward propogation of the Adapter layer
+        """
         residual = x
         x = self.gelu(self.linear1(x))
         x = self.linear2(x)
@@ -35,11 +52,21 @@ class AdaptedLinear(torch.nn.Module):
     """
 
     def __init__(self, linear, bottleneck_dim):
+        """
+        Args:
+            linear: torch.nn.Linear
+                Linear layer to which the Adapter layer is to be added
+            bottleneck_dim: int
+                Dimension of the bottleneck layer
+        """
         super().__init__()
         self.linear = linear
         self.adapter = Adapter(linear.out_features, bottleneck_dim)
 
     def forward(self, x):
+        """
+        Forward propogation of the AdaptedLinear layer
+        """
         x = self.linear(x)  # Normal linear layer propogation
         return self.adapter(x)  # Adapter layer propogation
 
@@ -47,7 +74,7 @@ class AdaptedLinear(torch.nn.Module):
 # Define the AdaptedModel class
 class AdaptedModel(BaseModel):
     """
-    Adds Adapter blocks as specified here: [https://arxiv.org/pdf/1902.00751]
+    Adds Adapter blocks to specific locations as described in the paper.
 
     TransformerBlock architecture:
     ```
@@ -82,6 +109,17 @@ class AdaptedModel(BaseModel):
         freeze_all: bool = True,
         bottleneck_dim: int = 4,
     ):
+        """
+        Args:
+            model_uri: str
+                URI of the pre-trained model
+            num_classes: int
+                Number of classes in the dataset
+            freeze_all: bool
+                Flag to freeze all the layers of the model
+            bottleneck_dim: int
+                Dimension of the bottleneck layer
+        """
         # Initialise parent class
         super().__init__(
             model_uri=model_uri, num_classes=num_classes, freeze_all=freeze_all
@@ -108,6 +146,8 @@ class AdaptedModel(BaseModel):
     def __adapt(self) -> None:
         """
         Method that replaces specific Linear layers with AdaptedLinear layers
+
+        Unfreezes specific layers as well
         """
         print("\n[DEBUG]Adding Adapters...\n")
         adapted_linear = partial(AdaptedLinear, bottleneck_dim=self.bottleneck_dim)
