@@ -20,7 +20,9 @@ class BaseModel:
         self.model_uri = model_uri
         self.num_classes = num_classes
         self.freeze_all = freeze_all
-        self.saved_model_path = f"model_{self.__class__.__name__.lower()}_best.pt"
+        self.saved_model_path = (
+            f"checkpoints/model_{self.__class__.__name__.lower()}_best.pt"
+        )
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"\nUsing device: {self.device}\n")
 

@@ -8,8 +8,15 @@ class SimpleFTModel(BaseModel):
     Only unfreezes the last 2 layers and trains them
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        model_uri: str = "distilbert/distilbert-base-uncased",
+        num_classes: int = 2,
+        freeze_all: bool = True,
+    ) -> None:
+        super().__init__(
+            model_uri=model_uri, num_classes=num_classes, freeze_all=freeze_all
+        )
 
         # Unfreeze the parameters in the pre_classifier and classifier layer
         self.__unfreeze_classification_head()
