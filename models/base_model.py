@@ -20,7 +20,7 @@ class BaseModel:
         self.model_uri = model_uri
         self.num_classes = num_classes
         self.freeze_all = freeze_all
-
+        self.saved_model_path = f"model_{self.__class__.__name__.lower()}_best.pt"
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"\nUsing device: {self.device}\n")
 
@@ -33,6 +33,9 @@ class BaseModel:
         if self.freeze_all:
             for param in self.model.parameters():
                 param.requires_grad = False
+
+        # Save the model
+        torch.save(self.model.state_dict(), self.saved_model_path)
 
     def get_parameter_count(self) -> Tuple[int]:
         """Method that returns trainable, and total parameter count"""
@@ -165,10 +168,7 @@ class BaseModel:
                 best_val_loss = val_loss
 
                 # Save the model
-                torch.save(
-                    self.model.state_dict(),
-                    f"model_{self.__class__.__name__.lower()}_best.pt",
-                )
+                torch.save(self.model.state_dict(), self.saved_model_path)
 
                 # Update best training loss and accuracy as well
                 best_train_loss = train_loss
@@ -195,9 +195,7 @@ class BaseModel:
         Computes and returns loss and accuracy on given (test) data
         """
         # Load the best model
-        self.model.load_state_dict(
-            torch.load(f"model_{self.__class__.__name__.lower()}_best.pt")
-        )
+        self.model.load_state_dict(torch.load(self.saved_model_path))
 
         # Put model on device
         self.model.to(self.device)
