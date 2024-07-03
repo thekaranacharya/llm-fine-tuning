@@ -18,6 +18,7 @@ class EvaluationUtils:
         self.dir_path = dir_path
         self.plots_path = f"{self.dir_path}/plots"
 
+        # Create the directory if it doesn't exist
         if not os.path.exists(self.plots_path):
             os.makedirs(self.plots_path)
 
