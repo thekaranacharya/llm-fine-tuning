@@ -13,7 +13,7 @@ from evaluation import EvaluationUtils
 # Global variables
 MODEL_NAME = "distilbert/distilbert-base-uncased"
 DATASET_NAME = "stanfordnlp/imdb"
-NUM_EPOCHS = 2
+NUM_EPOCHS = 25
 
 MODEL_MAP = {
     "Baseline": {
