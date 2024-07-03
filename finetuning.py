@@ -7,153 +7,115 @@ on a downstream task (IMDB sentiment classification).
 from rich import print
 import time
 from data_utils import DatasetUtils
-from models import BaseModel, SimpleFTModel, LoRAModel, AdaptedModel
-from plotting_utils import PlottingUtils
-import json
+from modeling import BaseModel, SimpleFTModel, AdaptedModel, LoRAModel
+from evaluation import EvaluationUtils
 
+# Global variables
 MODEL_NAME = "distilbert/distilbert-base-uncased"
 DATASET_NAME = "stanfordnlp/imdb"
-
-# Dataset ETL
-dataset_utils = DatasetUtils(
-    dataset_uri=DATASET_NAME, model_uri=MODEL_NAME, batch_size=64, num_workers=8
-)
-
-train_loader = dataset_utils.get_data_loader("train")
-val_loader = dataset_utils.get_data_loader("val")
-test_loader = dataset_utils.get_data_loader("test")
+NUM_EPOCHS = 25
+MODEL_MAP = {
+    "Baseline": {
+        "model": BaseModel(model_uri=MODEL_NAME, num_classes=2, freeze_all=True),
+    },
+    "Simple": {"model": SimpleFTModel(), "initial_lr": 8e-4},
+    "Adapter": {"model": AdaptedModel(bottleneck_dim=16), "initial_lr": 8e-4},
+    "LoRA": {
+        "model": LoRAModel(lora_rank=16, lora_alpha=16),
+        "initial_lr": 2e-5,
+    },
+}
 
 # Initialise dictionaries to store results
 test_losses, test_accuracies = {}, {}
 train_losses, train_accuracies = {}, {}
 training_times, trainable_params = {}, {}
 
-##########################
-# 1. Test with BaseModel
-base_model = BaseModel(model_uri=MODEL_NAME, num_classes=2, freeze_all=True)
 
-# Test baseline performance on downstream task
-test_loss, test_acc = base_model.predict(test_loader)
-print(f"Test Loss [Baseline (No fine-tuning)]: {test_loss:.2f}")
-print(f"Test accuracy [Baseline (No fine-tuning)]: {test_acc:.2f}%")
+# Helper methods
+def get_time_in_hours(seconds) -> float:
+    """Return time in hours given seconds."""
+    return seconds / 3600
 
-# Add to dictionary
-test_losses["Baseline (No fine-tuning)"] = test_loss
-test_accuracies["Baseline (No fine-tuning)"] = test_acc
 
-##########################
-# 2. Test with SimpleFTModel
-simple_ft_model = SimpleFTModel()
+def run_model(model_name, train_loader, val_loader, test_loader):
+    """Fine-tune the model (if not Baseline) and test the model on the downstream task."""
+    # Get model and initial learning rate
+    model = MODEL_MAP[model_name].get("model")
+    initial_lr = MODEL_MAP[model_name].get("initial_lr")
 
-# Get trainable parameter count
-trainable_params_percentage = simple_ft_model.get_parameter_count()
-print(f"\n% of trainable parameters: {trainable_params_percentage:.2f} %\n")
+    if model_name != "Baseline":
+        # Fine-tune the model
+        print(f"\nFine-tuning {model_name} model...\n")
 
-start = time.time()
-# Train the model
-train_loss, train_acc = simple_ft_model.train(
-    train_loader, val_loader, num_epochs=2, learning_rate=8e-4
-)
-training_time = time.time() - start
-print(f"Training time: {training_time:.2f} seconds")
+        # 1. Get trainable parameter count
+        trainable_params_percentage = model.get_parameter_count()
 
-# Test performance on downstream task
-test_loss, test_acc = simple_ft_model.predict(test_loader)
-print(f"Test loss [Simple]: {test_loss:.2f}")
-print(f"Test accuracy [Simple]: {test_acc:.2f}%")
+        # Add to dictionary
+        trainable_params[model_name] = trainable_params_percentage
 
-# Add to dictionary
-test_losses["Simple"] = test_loss
-test_accuracies["Simple"] = test_acc
-train_losses["Simple"] = train_loss
-train_accuracies["Simple"] = train_acc
-training_times["Simple"] = training_time
-trainable_params["Simple"] = trainable_params_percentage
+        # 2. Start timer
+        start = time.time()
 
-##########################
-# 3. Test with AdaptedModel
-adapted_model = AdaptedModel(bottleneck_dim=16)
+        # 3. Train the model
+        train_loss, train_acc = model.train(
+            train_loader, val_loader, num_epochs=NUM_EPOCHS, learning_rate=initial_lr
+        )
 
-# Get trainable parameter count
-trainable_params_percentage = adapted_model.get_parameter_count()
-print(f"\n% of trainable parameters: {trainable_params_percentage:.2f} %\n")
+        # 4. End timer and calculate training time
+        training_time = get_time_in_hours(time.time() - start)
 
-start = time.time()
-# Train the model
-train_loss, train_acc = adapted_model.train(
-    train_loader, val_loader, num_epochs=2, learning_rate=8e-4
-)
-training_time = time.time() - start
-print(f"Training time: {training_time:.2f} seconds")
+        # Add to dictionary
+        train_losses[model_name] = train_loss
+        train_accuracies[model_name] = train_acc
+        training_times[model_name] = training_time
 
-# Test performance on downstream task
-test_loss, test_acc = adapted_model.predict(test_loader)
-print(f"Test loss [Adapter]: {test_loss:.2f}")
-print(f"Test accuracy [Adapter]: {test_acc:.2f}%")
+    # Test performance on downstream task
+    test_loss, test_acc = model.predict(test_loader)
+    print(f"\nTest loss [{model_name}]: {test_loss:.2f}\n")
+    print(f"\nTest accuracy [{model_name}]: {test_acc:.2f}%\n")
 
-# Add to dictionary
-test_losses["Adapter"] = test_loss
-test_accuracies["Adapter"] = test_acc
-train_losses["Adapter"] = train_loss
-train_accuracies["Adapter"] = train_acc
-training_times["Adapter"] = training_time
-trainable_params["Adapter"] = trainable_params_percentage
+    # Add to dictionary
+    test_losses[model_name] = test_loss
+    test_accuracies[model_name] = test_acc
 
-##########################
-# 4. Test with LoRAModel
-lora_model = LoRAModel(lora_rank=16, lora_alpha=16)
 
-# Get trainable parameter count
-trainable_params_percentage = lora_model.get_parameter_count()
-print(f"\n% of trainable parameters: {trainable_params_percentage:.2f} %\n")
+def compute_results(outputs_path: str = "outputs/"):
+    """
+    Compute results.
 
-start = time.time()
-# Train the model
-train_loss, train_acc = lora_model.train(
-    train_loader, val_loader, num_epochs=2, learning_rate=2e-5
-)
-training_time = time.time() - start
-print(f"Training time: {training_time:.2f} seconds")
+    - Save the test losses, test accuracies, train losses, train accuracies, training times,
+    and trainable parameters to outputs/results.json
+    - Create and save plots to outputs/plots/
 
-# Test performance on downstream task
-test_loss, test_acc = lora_model.predict(test_loader)
-print(f"Test loss [LoRA]: {test_loss:.2f}")
-print(f"Test accuracy [LoRA]: {test_acc:.2f}%")
+    """
+    print("\n\nComputing results...\n")
+    evaluation_utils = EvaluationUtils(
+        dir_path=outputs_path,
+        test_losses=test_losses,
+        test_accuracies=test_accuracies,
+        train_losses=train_losses,
+        train_accuracies=train_accuracies,
+        training_times=training_times,
+        trainable_params=trainable_params,
+    )
+    evaluation_utils.compute_results()
 
-# Add to dictionary
-test_losses["LoRA"] = test_loss
-test_accuracies["LoRA"] = test_acc
-train_losses["LoRA"] = train_loss
-train_accuracies["LoRA"] = train_acc
-training_times["LoRA"] = training_time
-trainable_params["LoRA"] = trainable_params_percentage
 
-##########################
-# Evaluation
-## Save results to JSON
-
-with open("results.json", "w") as f:
-    json.dump(
-        {
-            "test_losses": test_losses,
-            "test_accuracies": test_accuracies,
-            "train_losses": train_losses,
-            "train_accuracies": train_accuracies,
-            "training_times": training_times,
-            "trainable_params": trainable_params,
-        },
-        f,
+if __name__ == "__main__":
+    # Dataset ETL
+    dataset_utils = DatasetUtils(
+        dataset_uri=DATASET_NAME, model_uri=MODEL_NAME, batch_size=64, num_workers=8
     )
 
-## Plotting
-plotting_utils = PlottingUtils()
-plotting_utils.plot_training_curves(
-    train_losses=train_losses, train_accuracies=train_accuracies
-)
+    train_loader = dataset_utils.get_data_loader("train")
+    val_loader = dataset_utils.get_data_loader("val")
+    test_loader = dataset_utils.get_data_loader("test")
 
-plotting_utils.plot_test_curves(
-    test_losses=test_losses, test_accuracies=test_accuracies
-)
+    # Run models
+    for model_name in MODEL_MAP:
+        print(f"\n\nRunning {model_name} model...\n")
+        run_model(model_name, train_loader, val_loader, test_loader)
 
-plotting_utils.plot_training_times(training_times=training_times)
-plotting_utils.plot_trainable_params(trainable_params=trainable_params)
+    # Compute results
+    compute_results()
