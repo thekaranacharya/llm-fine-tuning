@@ -19,18 +19,28 @@ class PlottingUtils:
         # Plot the training loss
         plt.figure(figsize=(10, 6))
         plt.bar(train_losses.keys(), train_losses.values(), color="skyblue")
-        plt.xlabel("Strategies")
+
+        # Display the values on top of the bars
+        for key, value in train_losses.items():
+            plt.text(key, value, str(round(value, 3)), ha="center")
+
+        plt.xlabel("PEFT techniques")
         plt.ylabel("Training Loss")
-        plt.title("Training Loss for each strategy")
+        plt.title("LLM PEFT: Best Training Loss comparison")
         plt.savefig(f"{self.dir_path}/training_loss.png")
         print("[DEBUG]Training loss plot saved.")
 
         # Plot the training accuracy
         plt.figure(figsize=(10, 6))
         plt.bar(train_accuracies.keys(), train_accuracies.values(), color="orange")
-        plt.xlabel("Strategies")
+
+        # Display the values on top of the bars
+        for key, value in train_accuracies.items():
+            plt.text(key, value, str(round(value, 3)), ha="center")
+
+        plt.xlabel("PEFT techniques")
         plt.ylabel("Training Accuracy")
-        plt.title("Training Accuracy for each strategy")
+        plt.title("LLM PEFT: Best Training Accuracy comparison")
         plt.savefig(f"{self.dir_path}/training_accuracy.png")
         print("[DEBUG]Training accuracy plot saved.")
 
@@ -43,18 +53,28 @@ class PlottingUtils:
         # Plot the test loss
         plt.figure(figsize=(10, 6))
         plt.bar(test_losses.keys(), test_losses.values(), color="skyblue")
-        plt.xlabel("Strategies")
+
+        # Display the values on top of the bars
+        for key, value in test_losses.items():
+            plt.text(key, value, str(round(value, 3)), ha="center")
+
+        plt.xlabel("PEFT techniques")
         plt.ylabel("Test Loss")
-        plt.title("Test Loss for each strategy")
+        plt.title("LLM PEFT: Test Loss comparison")
         plt.savefig(f"{self.dir_path}/test_loss.png")
         print("[DEBUG]Test loss plot saved.")
 
         # Plot the test accuracy
         plt.figure(figsize=(10, 6))
         plt.bar(test_accuracies.keys(), test_accuracies.values(), color="orange")
-        plt.xlabel("Strategies")
+
+        # Display the values on top of the bars
+        for key, value in test_accuracies.items():
+            plt.text(key, value, str(round(value, 3)), ha="center")
+
+        plt.xlabel("PEFT techniques")
         plt.ylabel("Test Accuracy")
-        plt.title("Test Accuracy for each strategy")
+        plt.title("LLM PEFT: Test Accuracy comparison")
         plt.savefig(f"{self.dir_path}/test_accuracy.png")
         print("[DEBUG]Test accuracy plot saved.")
 
@@ -65,9 +85,14 @@ class PlottingUtils:
         """
         plt.figure(figsize=(10, 6))
         plt.bar(training_times.keys(), training_times.values(), color="green")
-        plt.xlabel("Strategies")
+
+        # Display the values on top of the bars
+        for key, value in training_times.items():
+            plt.text(key, value, str(round(value, 3)), ha="center")
+
+        plt.xlabel("PEFT techniques")
         plt.ylabel("Training Time (s)")
-        plt.title("Training Time for each strategy")
+        plt.title("LLM PEFT: Training Time comparison")
         plt.savefig(f"{self.dir_path}/training_times.png")
         print("[DEBUG]Training times plot saved.")
 
@@ -78,8 +103,13 @@ class PlottingUtils:
         """
         plt.figure(figsize=(10, 6))
         plt.bar(trainable_params.keys(), trainable_params.values(), color="red")
-        plt.xlabel("Strategies")
+
+        # Display the values on top of the bars
+        for key, value in trainable_params.items():
+            plt.text(key, value, str(round(value, 3)), ha="center")
+
+        plt.xlabel("PEFT techniques")
         plt.ylabel("% of Trainable Parameters")
-        plt.title("% of Trainable Parameters for each strategy")
+        plt.title("LLM PEFT: Trainable Parameters % comparison")
         plt.savefig(f"{self.dir_path}/trainable_params.png")
         print("[DEBUG]Trainable params plot saved.")
