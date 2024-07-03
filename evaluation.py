@@ -38,12 +38,10 @@ class EvaluationUtils:
             trainable_params: dict
                 Dictionary containing the % of trainable parameters for each PEFT technique
         """
-        # Make directory to save plots if it doesn't exist
         self.dir_path = dir_path
-        self.plots_path = f"{self.dir_path}/plots"
 
         # Create the directory if it doesn't exist
-        os.makedirs(self.plots_path, exist_ok=True)
+        os.makedirs(self.dir_path, exist_ok=True)
 
         self.test_losses = test_losses
         self.test_accuracies = test_accuracies
@@ -82,7 +80,7 @@ class EvaluationUtils:
         plt.xlabel("PEFT techniques")
         plt.ylabel("Training Loss")
         plt.title("LLM PEFT: Best Training Loss comparison")
-        plt.savefig(f"{self.plots_path}/training_loss.png")
+        plt.savefig(f"{self.dir_path}/training_loss.png")
         print("[DEBUG]Training loss plot saved.")
 
         # Plot the training accuracy
@@ -93,7 +91,7 @@ class EvaluationUtils:
         plt.xlabel("PEFT techniques")
         plt.ylabel("Training Accuracy")
         plt.title("LLM PEFT: Best Training Accuracy comparison")
-        plt.savefig(f"{self.plots_path}/training_accuracy.png")
+        plt.savefig(f"{self.dir_path}/training_accuracy.png")
         print("[DEBUG]Training accuracy plot saved.")
 
     def __plot_test_curves(self):
@@ -108,7 +106,7 @@ class EvaluationUtils:
         plt.xlabel("PEFT techniques")
         plt.ylabel("Test Loss")
         plt.title("LLM PEFT: Test Loss comparison")
-        plt.savefig(f"{self.plots_path}/test_loss.png")
+        plt.savefig(f"{self.dir_path}/test_loss.png")
         print("[DEBUG]Test loss plot saved.")
 
         # Plot the test accuracy
@@ -119,7 +117,7 @@ class EvaluationUtils:
         plt.xlabel("PEFT techniques")
         plt.ylabel("Test Accuracy")
         plt.title("LLM PEFT: Test Accuracy comparison")
-        plt.savefig(f"{self.plots_path}/test_accuracy.png")
+        plt.savefig(f"{self.dir_path}/test_accuracy.png")
         print("[DEBUG]Test accuracy plot saved.")
 
     def __plot_training_times(self):
@@ -132,7 +130,7 @@ class EvaluationUtils:
         plt.xlabel("PEFT techniques")
         plt.ylabel("Training Time (s)")
         plt.title("LLM PEFT: Training Time comparison")
-        plt.savefig(f"{self.plots_path}/training_times.png")
+        plt.savefig(f"{self.dir_path}/training_times.png")
         print("[DEBUG]Training times plot saved.")
 
     def __plot_trainable_params(self):
@@ -147,7 +145,7 @@ class EvaluationUtils:
         plt.xlabel("PEFT techniques")
         plt.ylabel("% of Trainable Parameters")
         plt.title("LLM PEFT: Trainable Parameters % comparison")
-        plt.savefig(f"{self.plots_path}/trainable_params.png")
+        plt.savefig(f"{self.dir_path}/trainable_params.png")
         print("[DEBUG]Trainable params plot saved.")
 
     def compute_results(self):
