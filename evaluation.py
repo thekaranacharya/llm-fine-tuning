@@ -76,7 +76,10 @@ class EvaluationUtils:
         """
         # Plot the training loss
         plt.figure(figsize=(10, 6))
-        plt.bar(self.train_losses.keys(), self.train_losses.values(), color="skyblue")
+        bars = plt.bar(
+            self.train_losses.keys(), self.train_losses.values(), color="skyblue"
+        )
+        plt.bar_label(bars)  # Show the values on the bars
         plt.xlabel("PEFT techniques")
         plt.ylabel("Training Loss")
         plt.title("LLM PEFT: Best Training Loss comparison")
@@ -85,9 +88,10 @@ class EvaluationUtils:
 
         # Plot the training accuracy
         plt.figure(figsize=(10, 6))
-        plt.bar(
+        bars = plt.bar(
             self.train_accuracies.keys(), self.train_accuracies.values(), color="orange"
         )
+        plt.bar_label(bars)  # Show the values on the bars
         plt.xlabel("PEFT techniques")
         plt.ylabel("Training Accuracy")
         plt.title("LLM PEFT: Best Training Accuracy comparison")
@@ -102,7 +106,10 @@ class EvaluationUtils:
         """
         # Plot the test loss
         plt.figure(figsize=(10, 6))
-        plt.bar(self.test_losses.keys(), self.test_losses.values(), color="skyblue")
+        bars = plt.bar(
+            self.test_losses.keys(), self.test_losses.values(), color="skyblue"
+        )
+        plt.bar_label(bars)  # Show the values on the bars
         plt.xlabel("PEFT techniques")
         plt.ylabel("Test Loss")
         plt.title("LLM PEFT: Test Loss comparison")
@@ -111,9 +118,10 @@ class EvaluationUtils:
 
         # Plot the test accuracy
         plt.figure(figsize=(10, 6))
-        plt.bar(
+        bars = plt.bar(
             self.test_accuracies.keys(), self.test_accuracies.values(), color="orange"
         )
+        plt.bar_label(bars)  # Show the values on the bars
         plt.xlabel("PEFT techniques")
         plt.ylabel("Test Accuracy")
         plt.title("LLM PEFT: Test Accuracy comparison")
@@ -126,9 +134,12 @@ class EvaluationUtils:
         Makes a bar plot and saves it
         """
         plt.figure(figsize=(10, 6))
-        plt.bar(self.training_times.keys(), self.training_times.values(), color="green")
+        bars = plt.bar(
+            self.training_times.keys(), self.training_times.values(), color="green"
+        )
+        plt.bar_label(bars)  # Show the values on the bars
         plt.xlabel("PEFT techniques")
-        plt.ylabel("Training Time (s)")
+        plt.ylabel("Training Time (hours)")
         plt.title("LLM PEFT: Training Time comparison")
         plt.savefig(f"{self.dir_path}/training_times.png")
         print("[DEBUG]Training times plot saved.")
@@ -139,9 +150,10 @@ class EvaluationUtils:
         Makes a bar plot and saves it
         """
         plt.figure(figsize=(10, 6))
-        plt.bar(
+        bars = plt.bar(
             self.trainable_params.keys(), self.trainable_params.values(), color="red"
         )
+        plt.bar_label(bars)  # Show the values on the bars
         plt.xlabel("PEFT techniques")
         plt.ylabel("% of Trainable Parameters")
         plt.title("LLM PEFT: Trainable Parameters % comparison")
