@@ -8,6 +8,10 @@ This project provides a detailed, from-scratch exploration and implementation of
 
 The primary focus is on deep understanding of the mechanics behind these techniques, rather than achieving state-of-the-art performance. The dataset used for the experiments is a binary text classification task, which you can replace with your own dataset.
 
+## Blog Post
+The project is accompanied by a detailed blog post that provides a comprehensive overview of PEFT techniques, their implementation, and a comparative study of the three methods: 
+[Fine-tuning LLMs efficiently: A practical deep dive]()
+
 ## Key Goals
 
 * **Understanding PEFT:** Build a strong foundation in the theoretical underpinnings and practical implementation of PEFT methods.
@@ -46,7 +50,36 @@ The experiments compare the PEFT techniques on the following metrics:
 
 ## Results and Findings
 
-(Experimental results and key insights here)
+- **Simple Fine-Tuning:** 
+    - Achieved a test accuracy of 87.96%.
+    - Highest percentage of trainable parameters.
+    - Slowest convergence.
+
+- **Adapter Layers:**
+    - Achieved a test accuracy of 92.24%.
+    - Lowest percentage of trainable parameters.
+    - Fastest convergence compared to simple fine-tuning and LoRA.
+
+- **LoRA:**
+    - Achieved a test accuracy of 91.6%.
+    - Moderate percentage of trainable parameters, just lower than simple fine-tuning.
+    - Faster convergence compared to simple fine-tuning.
+
+- **Plots:**
+    <table>
+    <tr>
+        <td><img src="results/trainable_params.png" alt="Comparing trainable parameters"></td>
+        <td><img src="results/training_times.png" alt="Comparing training time"></td>
+    </tr>
+    <tr>
+        <td><img src="results/test_accuracy.png" alt="Comparing test accuracy"></td>
+        <td><img src="results/training_accuracy.png" alt="Comparing training accuracy"></td>
+    </tr>
+    </table>
+
+    
+
+
 
 ## References
 - Paper: [Parameter-Efficient Transfer Learning for NLP](https://arxiv.org/pdf/1902.00751)
