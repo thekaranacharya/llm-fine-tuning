@@ -2,7 +2,7 @@
 Implements Low-rank Adaptation (LoRA) parameter-efficient fine-tuning (PEFT)
 
 References:
-- https://lightning.ai/lightning-ai/studios/code-lora-from-scratch?tab=overview
+- https://lightning.ai/lightning-ai/studios/code-lora-from-scratch
 - https://lightning.ai/pages/community/article/lora-llm/
 - https://arxiv.org/pdf/2106.09685 (LoRA paper)
 """
