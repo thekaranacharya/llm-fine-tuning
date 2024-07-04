@@ -10,7 +10,7 @@ The primary focus is on deep understanding of the mechanics behind these techniq
 
 ## 🚀🚀🚀 Blog Post
 The project is accompanied by a detailed blog post that provides a comprehensive overview of PEFT techniques, their implementation, and a comparative study of the three methods: 
-[Fine-tuning LLMs efficiently: A practical deep dive]()
+[Fine-tuning LLMs efficiently: A practical deep dive](https://medium.com/@thekaranacharya/fine-tuning-llms-efficiently-9353d3b9a6d7)
 
 ## Key Goals
 
