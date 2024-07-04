@@ -8,7 +8,7 @@ This project provides a detailed, from-scratch exploration and implementation of
 
 The primary focus is on deep understanding of the mechanics behind these techniques, rather than achieving state-of-the-art performance. The dataset used for the experiments is a binary text classification task, which you can replace with your own dataset.
 
-## Blog Post
+## 🚀🚀🚀 Blog Post
 The project is accompanied by a detailed blog post that provides a comprehensive overview of PEFT techniques, their implementation, and a comparative study of the three methods: 
 [Fine-tuning LLMs efficiently: A practical deep dive]()
 
@@ -40,6 +40,11 @@ The experiments compare the PEFT techniques on the following metrics:
 * **Test Accuracy and Loss**
 * **Percentage of Trainable Parameters**
 * **Training Time**
+
+## Usage
+* Install the required packages using `pip install -r requirements.txt`.
+* Use a GPU for faster training. Check whether GPU is available using `nvidia-smi`.
+* Run the experiments using the command: `python finetuning.py`.
 
 ### Details
 * Fine-tuning downstream task: Binary Text Classification
@@ -76,9 +81,6 @@ The experiments compare the PEFT techniques on the following metrics:
         <td><img src="results/training_accuracy.png" alt="Comparing training accuracy"></td>
     </tr>
     </table>
-
-    
-
 
 
 ## References
