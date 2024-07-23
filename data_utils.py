@@ -5,6 +5,7 @@ References:
 """
 
 # Imports
+import re
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader, Dataset
@@ -89,6 +90,36 @@ class DatasetUtils:
             }
         )
 
+    def __preprocess(self):
+        """
+        Method to preprocess the dataset.
+        Performs the following preprocessing steps:
+        - Removes extra whitespaces
+        - Removes special characters
+        - Removes html tags
+        """
+
+        def __get_cleaned_text(text: str) -> str:
+            """Method to clean the text"""
+            # Remove extra whitespaces across the text
+            text = " ".join(text.split())
+
+            # Remove html-like tags
+            text = re.sub(r"<[^>]+>", "", text)
+
+            # Remove special characters
+            text = re.sub(r"[^a-zA-Z0-9\s.,!?\-\"\']", "", text)
+
+            return text
+
+        def __batch_clean(batch):
+            """Method that cleans a batch of data"""
+            batch["text"] = [__get_cleaned_text(text) for text in batch["text"]]
+            return batch
+
+        print("[DEBUG]Preprocessing the dataset...")
+        self.dataset = self.dataset.map(__batch_clean, batched=True)
+
     def __tokenize(self):
         """Method to tokenize the dataset in batches"""
 
@@ -143,13 +174,16 @@ class DatasetUtils:
         # Set seeds
         transformers.set_seed(self.seed)
 
-        # Load
+        # Load the data
         self.__load()
 
-        # Tokenize
+        # Pre-process the data
+        self.__preprocess()
+
+        # Tokenize the data
         self.__tokenize()
 
-        # Setup data loaders
+        # Setup the data loaders
         self.__setup_dataloaders()
         print("[DEBUG]Data setup complete.")
 
